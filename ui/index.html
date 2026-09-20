@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Galaxy Support: Fix it</title>
+<style>
+  :root {
+    --blue: #1428a0;
+    --blue-soft: #e7eafb;
+    --ink: #1a1d29;
+    --muted: #626878;
+    --page: #dfe4ee;
+    --surface: #ffffff;
+    --chat: #f3f5fa;
+    --line: #dde1ec;
+    --good: #0b7a4b;
+    --good-bg: #dcf3e8;
+    --fresh: #8a5a00;
+    --fresh-bg: #fdefc9;
+    --bad: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --blue: #7f93ff;
+      --blue-soft: #232a52;
+      --ink: #eceef6;
+      --muted: #9aa0b4;
+      --page: #0d0f16;
+      --surface: #1a1d29;
+      --chat: #131622;
+      --line: #2b3042;
+      --good: #6fdca6;
+      --good-bg: #163a2a;
+      --fresh: #f3c96a;
+      --fresh-bg: #3d2f0d;
+      --bad: #ff8f87;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Samsung Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .phone {
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    max-height: 820px;
+    background: var(--chat);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  @media (min-width: 460px) {
+    .phone { border-radius: 36px; box-shadow: 0 20px 60px rgba(20, 40, 160, 0.18); border: 1px solid var(--line); }
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--blue); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 18px;
+  }
+  header h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+  header p { margin: 0; font-size: 0.82rem; color: var(--muted); }
+
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .bubble {
+    max-width: 88%;
+    padding: 11px 14px;
+    border-radius: 20px;
+    word-wrap: break-word;
+  }
+  .bubble.bot { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; align-self: flex-start; }
+  .bubble.user { background: var(--blue); color: #fff; border-bottom-right-radius: 6px; align-self: flex-end; }
+  @media (prefers-color-scheme: dark) { .bubble.user { color: #0d0f16; } }
+  .bubble.error { border-color: var(--bad); color: var(--bad); }
+
+  .plan { align-self: stretch; display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 4px 12px;
+  }
+  .step-no {
+    grid-row: 1 / span 3;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--blue-soft); color: var(--blue);
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 0.9rem;
+  }
+  .card h2 { margin: 3px 0 0; font-size: 1rem; }
+  .card p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+  .cta {
+    justify-self: start;
+    margin-top: 8px;
+    display: inline-block;
+    background: var(--blue);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 10px 18px;
+    border-radius: 999px;
+  }
+  @media (prefers-color-scheme: dark) { .cta { color: #0d0f16; } }
+  .cta:hover { filter: brightness(1.08); }
+  .cta:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+  .variations { color: var(--muted); font-size: 0.84rem; padding: 0 4px; }
+
+  form.composer {
+    display: flex; gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  input[type="text"] {
+    flex: 1; min-width: 0;
+    font: inherit;
+    color: var(--ink);
+    background: var(--chat);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 11px 16px;
+  }
+  button.send {
+    font: inherit; font-weight: 700;
+    background: var(--blue); color: #fff;
+    border: 0; border-radius: 999px;
+    padding: 0 20px;
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { button.send { color: #0d0f16; } }
+  button.send:disabled { opacity: 0.55; cursor: wait; }
+
+  /* The status strip is the thing to show the judges */
+  #status {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  #status .latency { font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
+  #status .badge { padding: 4px 12px; border-radius: 999px; font-weight: 600; background: var(--line); color: var(--muted); }
+  #status .badge.hit { background: var(--good-bg); color: var(--good); }
+  #status .badge.miss { background: var(--fresh-bg); color: var(--fresh); }
+  #status .model { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #status .badge.flash { animation: flash 0.5s ease-out; }
+    @keyframes flash { from { transform: scale(1.25); } to { transform: scale(1); } }
+  }
+</style>
+</head>
+<body>
+<main class="phone">
+  <header>
+    <div class="avatar" aria-hidden="true">S</div>
+    <div>
+      <h1>Galaxy Support</h1>
+      <p>Describe the problem and get guided steps</p>
+    </div>
+  </header>
+
+  <section id="chat" aria-live="polite">
+    <div class="bubble bot">Hi! Tell me what's going wrong with your phone, for example "battery drains too fast".</div>
+  </section>
+
+  <form class="composer" id="form">
+    <input type="text" id="query" placeholder="What's the problem?" maxlength="500" autocomplete="off" aria-label="Describe your problem" required>
+    <button type="submit" class="send" id="send">Fix it</button>
+  </form>
+
+  <footer id="status" aria-label="Request status">
+    <span class="latency" id="latency">-- ms</span>
+    <span class="badge" id="cache">No request yet</span>
+    <span class="model" id="model"></span>
+  </footer>
+</main>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/v1/troubleshoot";
+const ALLOWED_SCHEMES = ["bixby:", "https:"];
+
+const chat = document.getElementById("chat");
+const form = document.getElementById("form");
+const input = document.getElementById("query");
+const sendBtn = document.getElementById("send");
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text; // textContent: never parses HTML
+  return node;
+}
+
+function addBubble(text, kind) {
+  const b = el("div", "bubble " + kind, text);
+  chat.appendChild(b);
+  scrollDown();
+  return b;
+}
+
+function scrollDown() { chat.scrollTop = chat.scrollHeight; }
+
+function isSafeDeeplink(url) {
+  try { return ALLOWED_SCHEMES.includes(new URL(url).protocol); }
+  catch { return false; }
+}
+
+function renderPlan(data) {
+  const contexts = (data.response && data.response.contexts) || [];
+  if (contexts.length === 0) {
+    addBubble("I couldn't find steps for that. Try describing the problem differently.", "bot");
+    return;
+  }
+  addBubble("Here's how to fix it:", "bot");
+
+  const plan = el("div", "plan");
+  contexts.forEach((ctx, i) => {
+    const card = el("article", "card");
+    card.appendChild(el("div", "step-no", String(i + 1)));
+    card.appendChild(el("h2", "", ctx.title || "Step " + (i + 1)));
+    if (ctx.description) card.appendChild(el("p", "", ctx.description));
+
+    if (ctx.actionableDeeplink && isSafeDeeplink(ctx.actionableDeeplink)) {
+      const link = el("a", "cta", ctx.ctaLabel || "Open setting");
+      link.href = ctx.actionableDeeplink;
+      card.appendChild(link);
+    }
+    plan.appendChild(card);
+  });
+  chat.appendChild(plan);
+
+  const variations = data.query_variations || [];
+  if (variations.length) {
+    chat.appendChild(el("div", "variations", "Also understood as: " + variations.join(", ")));
+  }
+  scrollDown();
+}
+
+function renderMeta(meta) {
+  document.getElementById("latency").textContent = meta.latency_ms + " ms";
+  const badge = document.getElementById("cache");
+  badge.textContent = meta.cache_hit ? "Cache hit" : "Cache miss";
+  badge.className = "badge " + (meta.cache_hit ? "hit" : "miss");
+  void badge.offsetWidth; // restart the flash animation
+  badge.classList.add("flash");
+  document.getElementById("model").textContent = meta.model + " ($" + meta.cost_usd.toFixed(4) + ")";
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const query = input.value.trim();
+  if (!query) return;
+
+  addBubble(query, "user");
+  input.value = "";
+  sendBtn.disabled = true;
+  const pending = addBubble("Working on it...", "bot");
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) throw new Error("Server returned " + res.status);
+    const data = await res.json();
+    pending.remove();
+    renderPlan(data);
+    renderMeta(data.meta);
+  } catch (err) {
+    pending.textContent = "Couldn't reach the troubleshooting service (" + err.message + "). Check that the backend is running on port 8000, then try again.";
+    pending.classList.add("error");
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+});
+</script>
+</body>
+</html>

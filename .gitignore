@@ -1,0 +1,7 @@
+.venv/
+gesture_env/
+.cache_dir/
+__pycache__/
+*.pyc
+.env
+.DS_Store
