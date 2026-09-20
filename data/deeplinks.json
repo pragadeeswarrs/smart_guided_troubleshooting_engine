@@ -1,0 +1,142 @@
+{
+  "deeplinks": [
+    {
+      "deeplink": "bixby://com.samsung.android.settings.display",
+      "description": "It will adjust display and brightness settings",
+      "message": "Display Settings",
+      "category": "auto",
+      "validation": {
+        "key": "screen_brightness",
+        "resultType": "integer",
+        "condition": "greater",
+        "value": "100"
+      }
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.display.timeout",
+      "description": "It will change screen timeout duration",
+      "message": "Screen Timeout",
+      "category": "auto",
+      "validation": {
+        "key": "screen_off_timeout",
+        "resultType": "integer",
+        "condition": "equal",
+        "value": "30000"
+      }
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.display.accidental_touch",
+      "description": "It will prevent accidental screen touches",
+      "message": "Accidental Touch Protection",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.battery",
+      "description": "It will monitor battery health and usage",
+      "message": "Battery Care",
+      "category": "auto",
+      "validation": {
+        "key": "power_saving_mode",
+        "resultType": "boolean",
+        "condition": "equal",
+        "value": "true"
+      }
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.battery.powersaving",
+      "description": "It will enable battery saving mode",
+      "message": "Power Saving",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.connections.wifi",
+      "description": "It will manage wireless network connections",
+      "message": "Wi-Fi Settings",
+      "category": "auto",
+      "validation": {
+        "key": "wifi_enabled",
+        "resultType": "boolean",
+        "condition": "equal",
+        "value": "true"
+      }
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.connections.bluetooth",
+      "description": "It will manage bluetooth paired accessories",
+      "message": "Bluetooth Settings",
+      "category": "auto",
+      "validation": {
+        "key": "bluetooth_enabled",
+        "resultType": "boolean",
+        "condition": "equal",
+        "value": "true"
+      }
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.connections.airplane",
+      "description": "It will toggle airplane flight mode",
+      "message": "Flight Mode",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.sound.volume",
+      "description": "It will configure speaker audio volume",
+      "message": "Sound and Vibration",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.sound.donotdisturb",
+      "description": "It will silence notifications and alerts",
+      "message": "Do Not Disturb",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.apps",
+      "description": "It will manage installed device applications",
+      "message": "App Manager",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.apps.special_access",
+      "description": "It will configure application special permissions",
+      "message": "Special Access",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.devicecare.storage",
+      "description": "It will clear cached application storage",
+      "message": "Internal Storage",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.devicecare.memory",
+      "description": "It will free system RAM memory",
+      "message": "Memory RAM",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.accessibility",
+      "description": "It will configure device accessibility services",
+      "message": "Accessibility Settings",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.software_update",
+      "description": "It will check latest system updates",
+      "message": "Software Update",
+      "category": "auto"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.general.reset_network",
+      "description": "It will reset wireless network configurations",
+      "message": "Reset Network Settings",
+      "category": "critical"
+    },
+    {
+      "deeplink": "bixby://com.samsung.android.settings.general.factory_reset",
+      "description": "It will erase and restore device",
+      "message": "Factory Data Reset",
+      "category": "critical"
+    }
+  ]
+}

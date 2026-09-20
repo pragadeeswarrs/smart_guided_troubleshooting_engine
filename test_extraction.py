@@ -1,4 +1,9 @@
 import asyncio
+import sys
+
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 from app.services.llm_service import extract_troubleshooting_steps
 from app.schemas import ContextDeeplinkResponse
 

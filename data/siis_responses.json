@@ -1,0 +1,102 @@
+[
+  {
+    "scenario_id": 1,
+    "query": "My Galaxy S24 screen is completely black and won't turn on",
+    "siis_response": "Smartphone Display issues: If your screen remains black, first perform a force restart by pressing and holding the Power and Volume Down buttons for 10 seconds. Check if the device vibrates. Plug into an official charger for 15 minutes. Inspect for display damage. If still unresponsive, consider visiting an authorized Samsung service center."
+  },
+  {
+    "scenario_id": 2,
+    "query": "Battery drains too fast on Galaxy S24 Ultra after update",
+    "siis_response": "Battery Optimization: To fix fast battery drain, open Settings and go to Battery and Device Care. Tap on Battery to view power usage per app. Put background apps into deep sleep. Turn on Power Saving mode to limit CPU speed to 70 percent and reduce brightness. Also check for app updates in Galaxy Store."
+  },
+  {
+    "scenario_id": 3,
+    "query": "Wi-Fi keeps disconnecting and dropping connection randomly",
+    "siis_response": "Wi-Fi Connection Troubleshooting: Open Settings and tap Connections, then select Wi-Fi. Tap the gear icon next to your network and select Forget Network, then reconnect. If drops continue, restart your Wi-Fi router. As a final step, navigate to General Management, tap Reset, and choose Reset Network Settings."
+  },
+  {
+    "scenario_id": 4,
+    "query": "Bluetooth headphones will not pair or keep cutting out",
+    "siis_response": "Bluetooth Pairing Issues: Go to Settings and tap Connections. Tap Bluetooth and ensure it is turned on. Unpair any older unused devices. Put your headphones into pairing mode according to the manufacturer instructions. If cutting out persists, reset your network settings in General Management."
+  },
+  {
+    "scenario_id": 5,
+    "query": "Galaxy camera app keeps crashing when opening photo mode",
+    "siis_response": "Camera Application Troubleshooting: Open Settings and tap Apps. Scroll down to Camera and tap Storage. Tap Clear Cache and then Clear Data. Restart your phone and test the camera. If issues persist, boot into Safe Mode to check if a third-party app is causing the crash."
+  },
+  {
+    "scenario_id": 6,
+    "query": "Phone is overheating and warm to touch during charging",
+    "siis_response": "Overheating while Charging: Remove heavy protective cases while charging. Avoid using high performance games or GPS navigation while plugged in. Use official Samsung chargers and cables. Navigate to Battery Care and disable Fast Charging if environment temperature is high. Keep phone in a cool, ventilated area."
+  },
+  {
+    "scenario_id": 7,
+    "query": "Touch screen is unresponsive and not registering taps properly",
+    "siis_response": "Touch Screen Sensitivity: Clean the screen with a micro-fiber cloth and remove thick screen protectors. Open Settings, tap Display, and toggle on Touch Sensitivity if using a screen protector. Perform a force restart by holding Volume Down and Power buttons for 10 seconds. Check for software updates."
+  },
+  {
+    "scenario_id": 8,
+    "query": "No sound coming from phone speaker during media playback",
+    "siis_response": "Speaker and Sound Issues: Open Settings and tap Sounds and Vibration. Ensure Volume sliders for Media and Ringtone are turned up. Make sure Do Not Disturb mode is disabled. Check if Bluetooth is accidentally connected to an external speaker. Restart your device to clear audio engine faults."
+  },
+  {
+    "scenario_id": 9,
+    "query": "Phone stuck in boot loop restarting continuously",
+    "siis_response": "Boot Loop Recovery: Connect the phone to a computer with a USB cable. Press and hold Volume Up and Power buttons simultaneously until the Samsung recovery menu appears. Use volume keys to select Wipe Cache Partition and confirm. If the issue remains, perform a Factory Data Reset from the recovery menu."
+  },
+  {
+    "scenario_id": 10,
+    "query": "Mobile data not working and no internet icon showing",
+    "siis_response": "Mobile Data Connectivity: Swipe down to access Quick Settings and toggle Airplane Mode on for 10 seconds, then off. Open Settings, tap Connections, then Mobile Networks. Verify that Mobile Data is enabled and Access Point Names are correctly configured for your carrier. Restart the device."
+  },
+  {
+    "scenario_id": 11,
+    "query": "Fingerprint scanner not recognizing finger on lock screen",
+    "siis_response": "Biometrics Troubleshooting: Clean the fingerprint sensor area thoroughly. Open Settings, tap Security and Privacy, then Biometrics. Select Fingerprints and delete the existing fingerprint registration. Re-register your fingerprints by placing your thumb at various angles for complete coverage."
+  },
+  {
+    "scenario_id": 12,
+    "query": "Microphone not working during phone calls and voice recordings",
+    "siis_response": "Microphone Troubleshooting: Check the bottom and top microphone pinholes for dust or lint and clean carefully with a soft brush. Open Settings, tap Privacy, and ensure Microphone Access is toggled on. Open Voice Recorder app to test hardware recording capability."
+  },
+  {
+    "scenario_id": 13,
+    "query": "Device storage is almost full and running out of space",
+    "siis_response": "Storage Cleanup: Open Settings and navigate to Device Care. Tap Storage to view space breakdown. Delete duplicate files, large videos, and empty the Recycle Bin. Tap Apps to clear cache from social media apps like WhatsApp, Instagram, and Chrome."
+  },
+  {
+    "scenario_id": 14,
+    "query": "GPS location is inaccurate and map navigation is lost",
+    "siis_response": "GPS and Location Accuracy: Open Settings and tap Location. Ensure Location is toggled on. Tap Location Services and enable Wi-Fi Scanning and Bluetooth Scanning for improved accuracy. Step outside to ensure clear view of the sky away from tall buildings."
+  },
+  {
+    "scenario_id": 15,
+    "query": "App notifications are delayed or not showing up at all",
+    "siis_response": "Notification Troubleshooting: Open Settings and tap Notifications. Check App Notifications to verify alerts are enabled for specific apps. Open Battery settings, tap Background usage limits, and remove the affected apps from Deep Sleeping Apps. Ensure Do Not Disturb is turned off."
+  },
+  {
+    "scenario_id": 16,
+    "query": "Wireless charging not working on charging pad",
+    "siis_response": "Wireless Charging Troubleshooting: Align the center of your phone directly onto the wireless charger pad. Remove thick metal or magnetic phone cases. Verify the charging pad is connected to an adequate power adapter. Open Battery settings and check that Fast Wireless Charging is enabled."
+  },
+  {
+    "scenario_id": 17,
+    "query": "Screen flickering or green tint appearing on display",
+    "siis_response": "Display Tint and Flickering: Open Settings and tap Display. Turn off Adaptive Brightness and set manual brightness. Toggle Eye Comfort Shield off to eliminate yellow or green hue. Check for software updates in Settings. If green lines persist across all screens, contact Samsung service."
+  },
+  {
+    "scenario_id": 18,
+    "query": "SIM card not detected and showing No SIM error",
+    "siis_response": "SIM Card Detection: Turn off your phone and eject the SIM tray using an ejection pin. Check the gold contacts of the nano-SIM for dirt or scratches and re-seat firmly in the tray. Re-insert the tray and power on. If unreadable, test another SIM card or contact your network carrier."
+  },
+  {
+    "scenario_id": 19,
+    "query": "Google Play Store stuck downloading or updating apps",
+    "siis_response": "Play Store Download Issues: Open Settings and tap Apps. Locate Google Play Store, tap Storage, and tap Clear Cache then Clear Data. Repeat the same steps for Google Play Services. Restart your device and reconnect to a stable Wi-Fi network before re-trying downloads."
+  },
+  {
+    "scenario_id": 20,
+    "query": "Phone is freezing and apps are lagging continuously",
+    "siis_response": "System Performance Optimization: Open Settings and tap Device Care. Tap Optimize Now to close background apps and free RAM memory. Restart your device at least once a week. Ensure at least 15 percent of storage is free. Check for pending One UI software updates."
+  }
+]
