@@ -54,6 +54,8 @@ async def health() -> dict[str, str]:
 async def troubleshoot(request: TroubleshootRequest) -> APIResponse:
     start = time.perf_counter()
     query = request.query.strip()
+    # 1. Retrieve siis_response from request if present
+    siis_response = getattr(request, "siis_response", None)
 
     # Fast path: cache hit
     cached = cache_manager.get_cached_plan(query)
@@ -67,16 +69,17 @@ async def troubleshoot(request: TroubleshootRequest) -> APIResponse:
         return _build_response(query, cached, meta)
 
     # Slow path: extract -> map deeplinks -> validate
-    plan = await extract_troubleshooting_steps(query)
+    # 2. Pass siis_response to Member 2's extraction function
+    plan = await extract_troubleshooting_steps(query, siis_response)
     plan = await map_deeplinks(plan)
     plan = await sanitize_output(plan)
 
-    cache_manager.set_cached_plan(query, {**plan, "_model": MODEL_NAME})
+    cache_manager.set_cached_plan(query, {**plan, "_model": plan.get("model", MODEL_NAME)})
 
     meta = MetaData(
         latency_ms=_elapsed_ms(start),
         cache_hit=False,
-        model=MODEL_NAME,
+        model=plan.get("model", MODEL_NAME),
         cost_usd=float(plan.get("cost_usd", 0.0)),
     )
     return _build_response(query, plan, meta)
