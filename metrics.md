@@ -21,8 +21,8 @@
 
 | Benchmark Metric | Target Threshold | Measured P50 | Measured P95 | Status |
 |---|---|---|---|:---:|
-| **Cold Start Latency** | P95 <= 8000 ms | - | **1894.0 ms** | **PASS** |
-| **Repeat Query Latency** (30x) | P95 <= 300 ms | **0.9 ms** | **1.3 ms** | **PASS** |
+| **Cold Start Latency** | P95 <= 8000 ms | - | **4279.3 ms** | **PASS** |
+| **Repeat Query Latency** (30x) | P95 <= 300 ms | **0.8 ms** | **1.7 ms** | **PASS** |
 | **Repeat Cache Hit Rate** | >= 90% | - | **100.0%** | **PASS** |
 | **Paraphrase Semantic Hit Rate** (20x) | >= 80% | - | **100.0%** | **PASS** |
 

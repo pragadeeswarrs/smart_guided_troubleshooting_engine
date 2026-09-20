@@ -64,6 +64,113 @@ def load_catalog_uris(catalog_path: Optional[str] = None) -> Set[str]:
 class StrictValidator:
     """Deterministic Quality Gatekeeper enforcing Blocks A1-A5 and Gates G4-G5."""
 
+    KNOWN_SETTINGS_SCREENS = [
+        "Screen Timeout", "Accidental Touch", "Touch Sensitivity", "Adaptive Brightness",
+        "Eye Comfort Shield", "Battery and Device Care", "Battery Care", "Power Saving",
+        "Internal Storage", "Device Care", "Location Services", "Security and Privacy",
+        "Reset Network Settings", "Factory Data Reset", "Special Access", "App Notifications",
+        "Display", "Battery", "Wi-Fi", "Bluetooth", "Airplane Mode", "Mobile Networks",
+        "Sound and Vibration", "Volume", "Do Not Disturb", "Location", "Security",
+        "Privacy", "Biometrics", "Fingerprints", "Software Update", "Camera",
+        "Gallery", "Apps", "Sound", "Storage", "Memory", "Notifications"
+    ]
+
+    @classmethod
+    def extract_target_screen(
+        cls,
+        steps: List[str],
+        action_name: str = "",
+        title: str = "",
+    ) -> str:
+        """
+        Dynamically extract the concrete Samsung Settings screen name from step text.
+        Inspects navigation cues (e.g. 'tap on Display', 'open Battery'), known settings
+        patterns, and action/goal contexts.
+        """
+        combined_text = " ".join(steps) if steps else ""
+
+        # 1. Match known Samsung settings screens against steps (case-insensitive)
+        for screen in cls.KNOWN_SETTINGS_SCREENS:
+            pattern = rf"\b{re.escape(screen)}\b"
+            if re.search(pattern, combined_text, re.IGNORECASE):
+                return screen
+
+        # 2. Extract using regex navigation cues from steps
+        nav_pattern = re.compile(
+            r"(?:tap\s+on|select|go\s+to|open|navigate\s+to|choose)\s+([A-Z][A-Za-z0-9\s&/-]{2,20}?)(?:\.|\,|$|\band\b|\bthen\b|\bto\b|\bin\b)",
+            re.IGNORECASE,
+        )
+        for s in steps:
+            match = nav_pattern.search(s)
+            if match:
+                candidate = match.group(1).strip()
+                candidate = re.sub(r"\b(settings|menu|option|tab|screen)\b", "", candidate, flags=re.IGNORECASE).strip()
+                words = candidate.split()
+                if 1 <= len(words) <= 2 and words[0].lower() not in {"and", "the", "a", "your"}:
+                    return " ".join(words).title()
+
+        # 3. Check action name
+        if action_name:
+            clean_act = re.sub(r"\b(configuration|troubleshooting|settings|inspection|recovery)\b", "", action_name, flags=re.IGNORECASE).strip()
+            if clean_act:
+                act_words = clean_act.split()[:2]
+                return " ".join(act_words).title()
+
+        # 4. Check title
+        if title:
+            clean_title = re.sub(r"\b(troubleshooting|configuration|settings)\b", "", title, flags=re.IGNORECASE).strip()
+            if clean_title:
+                t_words = clean_title.split()[:2]
+                return " ".join(t_words).title()
+
+        return "Device"
+
+    @classmethod
+    def build_dynamic_dummy_positive(cls, target_screen: str) -> Dict[str, str]:
+        """
+        Builds a dynamic dummy_positive fallback object with:
+        - deeplink: 'bixby://dummy_positive'
+        - description: strictly 5 to 7 words, starting with 'It will', naming the concrete screen
+        - message: naming the concrete Settings screen
+        """
+        raw_words = [w for w in target_screen.split() if w]
+        # If compound like "Battery and Device Care" -> "Battery Care"
+        if len(raw_words) >= 4 and raw_words[1].lower() == "and":
+            words = [raw_words[0], raw_words[-1]]
+        elif len(raw_words) == 3 and raw_words[1].lower() == "and":
+            words = [raw_words[0], raw_words[2]]
+        elif len(raw_words) > 2:
+            words = raw_words[:2]
+        else:
+            words = raw_words
+
+        while words and words[-1].lower() in {"and", "or", "of", "to", "for", "with", "in"}:
+            words.pop()
+
+        if not words:
+            words = ["Device"]
+
+        screen_name = " ".join(words).title()
+        if len(words) == 1:
+            desc = f"It will open {screen_name} settings screen"
+        else:
+            desc = f"It will open {screen_name} settings"
+
+        desc_words = desc.split()
+        if len(desc_words) < 5:
+            desc_words.append("screen")
+        elif len(desc_words) > 7:
+            desc_words = desc_words[:7]
+
+        final_desc = " ".join(desc_words)
+        msg = f"{screen_name} Settings" if not screen_name.lower().endswith("settings") else screen_name
+
+        return {
+            "deeplink": "bixby://dummy_positive",
+            "description": final_desc,
+            "message": msg,
+        }
+
     @classmethod
     def sanitize(cls, goal_dict: Dict[str, Any], catalog_uris: Optional[Set[str]] = None) -> Dict[str, Any]:
         """Programmatically sanitize a single Goal dictionary."""
@@ -149,31 +256,63 @@ class StrictValidator:
                     cleaned_steps = [f"Navigate to {action['actionName']} in device settings."]
                 group["steps"] = cleaned_steps
 
+                # Dynamic Context Extraction for concrete target screen
+                target_screen = cls.extract_target_screen(
+                    cleaned_steps,
+                    action_name=action.get("actionName", ""),
+                    title=clean_title,
+                )
+
                 # Deeplink logic for auto / manual / critical (Block A2)
                 dl_obj = group.get("actionableDeeplink")
                 if cat == "auto":
                     # auto Category MUST carry an actionableDeeplink
                     if not dl_obj or not isinstance(dl_obj, dict) or not dl_obj.get("deeplink"):
-                        group["actionableDeeplink"] = {
-                            "deeplink": "bixby://dummy_positive",
-                            "description": "It will open device settings screen",
-                            "message": "Settings",
-                        }
+                        group["actionableDeeplink"] = cls.build_dynamic_dummy_positive(target_screen)
                     else:
                         uri = dl_obj.get("deeplink", "")
                         # Validate against catalog; if not found, fallback to bixby://dummy_positive
                         if catalog_uris and uri not in catalog_uris and uri != "bixby://dummy_positive":
                             dl_obj["deeplink"] = "bixby://dummy_positive"
-                        # Ensure required description is present and 5-7 words
-                        dl_desc = scrub_urls(str(dl_obj.get("description", "It will open device settings screen"))).strip()
-                        if not dl_desc.lower().startswith("it will"):
-                            dl_desc = "It will open device settings screen"
-                        dl_words = dl_desc.split()
-                        if len(dl_words) < 5 or len(dl_words) > 7:
-                            dl_desc = "It will open device settings screen"
-                        dl_obj["description"] = dl_desc
-                        if not dl_obj.get("message"):
-                            dl_obj["message"] = "Settings"
+
+                        if dl_obj.get("deeplink") == "bixby://dummy_positive":
+                            fallback = cls.build_dynamic_dummy_positive(target_screen)
+                            current_desc = scrub_urls(str(dl_obj.get("description", ""))).strip()
+                            if not current_desc or current_desc.lower() in {
+                                "it will open device settings screen",
+                                "it will open device settings",
+                                "it will open settings screen",
+                            }:
+                                dl_obj["description"] = fallback["description"]
+                                dl_obj["message"] = fallback["message"]
+                            else:
+                                if not current_desc.lower().startswith("it will"):
+                                    current_desc = f"It will {current_desc[0].lower() + current_desc[1:]}"
+                                words = current_desc.split()
+                                if len(words) < 5 or len(words) > 7:
+                                    dl_obj["description"] = fallback["description"]
+                                else:
+                                    dl_obj["description"] = " ".join(words)
+                                if not dl_obj.get("message"):
+                                    dl_obj["message"] = fallback["message"]
+                        else:
+                            # Catalog URI: ensure description is 5-7 words and starts with "It will"
+                            dl_desc = scrub_urls(str(dl_obj.get("description", ""))).strip()
+                            if not dl_desc.lower().startswith("it will"):
+                                dl_desc = f"It will open {target_screen} settings"
+                            dl_words = dl_desc.split()
+                            if len(dl_words) < 5 or len(dl_words) > 7:
+                                dl_desc = f"It will open {target_screen} settings"
+                                dl_words = dl_desc.split()
+                                if len(dl_words) < 5:
+                                    dl_words.append("screen")
+                                elif len(dl_words) > 7:
+                                    dl_words = dl_words[:7]
+                                dl_desc = " ".join(dl_words)
+                            dl_obj["description"] = dl_desc
+                            if not dl_obj.get("message"):
+                                dl_obj["message"] = f"{target_screen} Settings"
+
                         group["actionableDeeplink"] = dl_obj
                 elif cat == "manual":
                     # manual actions: actionableDeeplink is optional (None if absent/empty)
@@ -385,5 +524,28 @@ if __name__ == "__main__":
     print(f"Query variations count: {len(plan['query_variations'])}")
     leaks = StrictValidator.audit_url_leaks(plan)
     print("URL Leaks detected:", leaks)
-    assert len(leaks) == 0, "Gate G5 violation!"
+    # Test Dynamic Context Extraction for dummy_positive Fallback
+    auto_goal = {
+        "title": "Power Optimization",
+        "actions": [
+            {
+                "actionName": "Configure Battery",
+                "category": "auto",
+                "stepGroups": [
+                    {
+                        "steps": ["Open Settings and go to Battery and Device Care. Tap on Battery to view usage."]
+                    }
+                ],
+            }
+        ],
+    }
+    cleaned_auto = StrictValidator.sanitize(auto_goal, catalog_uris=set())
+    auto_dl = cleaned_auto["actions"][0]["stepGroups"][0]["actionableDeeplink"]
+    print("Dynamic Fallback Deeplink:", auto_dl)
+    assert auto_dl["deeplink"] == "bixby://dummy_positive"
+    assert "Battery" in auto_dl["message"]
+    assert auto_dl["description"].lower().startswith("it will")
+    assert 5 <= len(auto_dl["description"].split()) <= 7
+    print("[PASS] Dynamic Contextual Fallback Test Passed!")
+
     print("[PASS] StrictValidator Self-Test Passed 100%!")

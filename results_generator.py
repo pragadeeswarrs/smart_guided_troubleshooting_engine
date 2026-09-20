@@ -42,9 +42,10 @@ def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
     lines = [line.strip() for line in siis_text.splitlines() if line.strip()]
     header = lines[0] if lines else query
 
-    # Extract topic
-    topic_match = re.search(r"([A-Za-z\s]+?)(?:Troubleshooting|Issues|Optimization|Recovery|Cleanup|Detection):", header)
+    # Extract topic (preserving hyphens like Wi-Fi)
+    topic_match = re.search(r"([A-Za-z0-9\-/\s]+?)(?:Troubleshooting|Issues|Optimization|Recovery|Cleanup|Detection):", header)
     topic = topic_match.group(1).strip() if topic_match else "Device"
+    topic = topic.replace("Smartphone", "").strip()
     if not topic or len(topic.split()) > 2:
         topic = "Device"
 
@@ -72,11 +73,7 @@ def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
         "stepGroups": [
             {
                 "steps": auto_steps,
-                "actionableDeeplink": {
-                    "deeplink": "bixby://dummy_positive",
-                    "description": f"It will open device {topic.lower()} settings",
-                    "message": f"{topic} Settings",
-                },
+                "actionableDeeplink": None,
             }
         ],
     })
