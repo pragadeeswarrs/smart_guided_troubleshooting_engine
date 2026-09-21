@@ -18,7 +18,10 @@ from app.schemas import APIResponse, MetaData, TroubleshootRequest
 from app.services.llm_service import MODEL_NAME, extract_troubleshooting_steps
 from app.services.search_service import map_deeplinks
 from app.services.validation import sanitize_output
+from app.retrieval import RetrievalEngine
 
+# Initialize hybrid search engine at startup
+retrieval_engine = RetrievalEngine(data_path="data/deeplinks.json")
 app = FastAPI(title="PRISM Smart Guided Troubleshooting Engine", version="0.1.0")
 
 # Wide open for hackathon use so the UI can be served from file:// or any port.
