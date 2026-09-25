@@ -9,13 +9,11 @@ retrieval_engine = RetrievalEngine(data_path="data/deeplinks.json")
 
 
 async def map_deeplinks(steps: dict[str, Any]) -> dict[str, Any]:
-    """Attach the correct `actionableDeeplink` to each step in `steps["contexts"]`."""
+    """Attach actionableDeeplink and validationDeeplink to each step."""
     
-    # Get the list of steps/contexts from the payload
     items = steps.get("contexts") or steps.get("actions") or steps.get("steps") or []
     
     for item in items:
-        # Extract the description string
         query_text = (
             item.get("description") 
             or item.get("step") 
@@ -24,12 +22,27 @@ async def map_deeplinks(steps: dict[str, Any]) -> dict[str, Any]:
         )
         
         # Query ChromaDB + BM25 hybrid search engine
-        match = retrieval_engine.search_deeplink(query_text)
+        match = retrieval_engine.search_deeplink(query_text) or {}
         
-        # Attach the matched deeplink URI and action category
-        item["actionableDeeplink"] = match.get("deeplink_uri")
-        item["category"] = match.get("category", "manual")
+        category = item.get("category") or match.get("category", "manual")
+        item["category"] = category
         
+        deeplink_uri = match.get("deeplink_uri")
+        
+        # Rule 4: If an auto action has no catalog match, assign bixby://dummy_positive
+        if not deeplink_uri and category == "auto":
+            deeplink_uri = "bixby://dummy_positive"
+            
+        # Rule 2: Copy masked URI verbatim into actionableDeeplink
+        item["actionableDeeplink"] = deeplink_uri
+        
+        # Rule 3: Copy validation object verbatim into validationDeeplink if present
+        validation_obj = match.get("validation")
+        if validation_obj:
+            item["validationDeeplink"] = validation_obj
+        else:
+            item["validationDeeplink"] = None
+
     # Sort steps by priority: auto -> manual -> critical
     if hasattr(retrieval_engine, "sort_actions_by_category") and items:
         sorted_items = retrieval_engine.sort_actions_by_category(items)
