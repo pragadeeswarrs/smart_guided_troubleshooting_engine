@@ -71,18 +71,21 @@ class RetrievalEngine:
         query_embedding = self.model.encode(query).tolist()
         vector_results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=1
+            n_results=1,
+            include=["metadatas", "distances"]
         )
         
-        # BM25 Keyword Search
-        tokenized_query = query.lower().split()
-        bm25_scores = self.bm25.get_scores(tokenized_query) if self.bm25 else []
+        best_idx = None
+        best_distance = float("inf")
 
-        best_idx = 0
         if vector_results and vector_results.get("metadatas") and vector_results["metadatas"][0]:
             best_idx = vector_results["metadatas"][0][0]["catalog_idx"]
-        elif bm25_scores:
-            best_idx = int(max(range(len(bm25_scores)), key=lambda i: bm25_scores[i]))
+            if vector_results.get("distances") and vector_results["distances"][0]:
+                best_distance = vector_results["distances"][0][0]
+
+        # Check match confidence: if distance > 1.1, treat as NO catalog match
+        if best_idx is None or best_distance > 1.1:
+            return {"deeplink_uri": None, "category": "manual", "validation": None}
 
         matched_item = self.catalog[best_idx]
 
