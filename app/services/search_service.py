@@ -50,5 +50,7 @@ async def map_deeplinks(steps: dict[str, Any]) -> dict[str, Any]:
             steps["contexts"] = sorted_items
         elif "actions" in steps:
             steps["actions"] = sorted_items
+        elif "steps" in steps:
+            steps["steps"] = sorted_items
 
     return steps
