@@ -29,26 +29,49 @@ class RetrievalEngine:
         if not self.data_path.exists():
             return []
         with open(self.data_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+
+        raw_items = []
+        if isinstance(data, list):
+            raw_items = data
+        elif isinstance(data, dict):
+            # Check for common wrapper keys
+            for key in ["deeplinks", "items", "data", "catalog", "entries"]:
+                if key in data and isinstance(data[key], list):
+                    raw_items = data[key]
+                    break
+            else:
+                # Fallback to dictionary values if mapped by ID
+                raw_items = list(data.values())
+
+        # Ensure every item in catalog is strictly a dictionary
+        return [item for item in raw_items if isinstance(item, dict)]
 
     def _build_index(self):
         if not self.catalog:
             return
 
         corpus_texts = []
+        valid_catalog = []
         
-        for idx, item in enumerate(self.catalog):
+        for item in self.catalog:
+            # Guard against non-dictionary entries
+            if not isinstance(item, dict):
+                continue
+
             # Rule 1: Index metadata fields ONLY. NEVER include the URI string itself.
-            description = item.get("description", "")
-            message = item.get("message", "")
-            qna_desc = item.get("qna_description", "")
-            original_type = item.get("originalType", "")
+            description = str(item.get("description", "") or "")
+            message = str(item.get("message", "") or "")
+            qna_desc = str(item.get("qna_description", "") or "")
+            original_type = str(item.get("originalType", "") or "")
 
             searchable_text = f"{description} {message} {qna_desc} {original_type}".strip()
             if not searchable_text:
                 searchable_text = "setting"
 
+            idx = len(valid_catalog)
             corpus_texts.append(searchable_text)
+            valid_catalog.append(item)
             
             # Store in ChromaDB
             embeddings = self.model.encode(searchable_text).tolist()
@@ -59,9 +82,12 @@ class RetrievalEngine:
                 ids=[str(idx)]
             )
 
+        self.catalog = valid_catalog
+
         # Initialize BM25 index
-        tokenized_corpus = [text.lower().split() for text in corpus_texts]
-        self.bm25 = BM25Okapi(tokenized_corpus)
+        if corpus_texts:
+            tokenized_corpus = [text.lower().split() for text in corpus_texts]
+            self.bm25 = BM25Okapi(tokenized_corpus)
 
     def search_deeplink(self, query: str) -> dict[str, Any]:
         if not self.catalog:
@@ -83,8 +109,8 @@ class RetrievalEngine:
             if vector_results.get("distances") and vector_results["distances"][0]:
                 best_distance = vector_results["distances"][0][0]
 
-        # Check match confidence: if distance > 1.1, treat as NO catalog match
-        if best_idx is None or best_distance > 1.1:
+        # Distance threshold check (> 1.1 means low confidence / no match)
+        if best_idx is None or best_distance > 1.1 or best_idx >= len(self.catalog):
             return {"deeplink_uri": None, "category": "manual", "validation": None}
 
         matched_item = self.catalog[best_idx]
