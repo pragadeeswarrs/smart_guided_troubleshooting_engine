@@ -245,28 +245,64 @@ function renderPlan(data) {
     addBubble("I couldn't find steps for that. Try describing the problem differently.", "bot");
     return;
   }
-  addBubble("Here's how to fix it:", "bot");
+
+  // Display the main goal/title
+  const ctx = contexts[0];
+  addBubble("Here's how to fix it: " + (ctx.title || ""), "bot");
 
   const plan = el("div", "plan");
-  contexts.forEach((ctx, i) => {
+  const actions = ctx.actions || [];
+
+  // Iterate through the actions array instead of contexts
+  actions.forEach((action, i) => {
     const card = el("article", "card");
     card.appendChild(el("div", "step-no", String(i + 1)));
-    card.appendChild(el("h2", "", ctx.title || "Step " + (i + 1)));
-    if (ctx.description) card.appendChild(el("p", "", ctx.description));
+    card.appendChild(el("h2", "", action.actionName || "Step " + (i + 1)));
+    if (action.description) card.appendChild(el("p", "", action.description));
 
-    if (ctx.actionableDeeplink && isSafeDeeplink(ctx.actionableDeeplink)) {
-      const link = el("a", "cta", ctx.ctaLabel || "Open setting");
-      link.href = ctx.actionableDeeplink;
-      card.appendChild(link);
+    // Dive into stepGroups to render the actual steps and buttons
+    if (action.stepGroups && action.stepGroups.length > 0) {
+      const group = action.stepGroups[0];
+      
+      // 1. Render the bulleted steps
+      if (group.steps && group.steps.length > 0) {
+        const stepContainer = el("div", "");
+        stepContainer.style.gridColumn = "2"; // Aligns with your existing CSS grid
+        
+        const ul = el("ul", "");
+        ul.style.paddingLeft = "20px";
+        ul.style.margin = "8px 0";
+        ul.style.fontSize = "0.9rem";
+        ul.style.color = "var(--muted)";
+        
+        group.steps.forEach(stepText => {
+          ul.appendChild(el("li", "", stepText));
+        });
+        
+        stepContainer.appendChild(ul);
+        card.appendChild(stepContainer);
+      }
+
+      // 2. Render the actionable deeplink button
+      if (group.actionableDeeplink && group.actionableDeeplink.deeplink) {
+        const linkUrl = group.actionableDeeplink.deeplink;
+        if (isSafeDeeplink(linkUrl)) {
+          const btnContainer = el("div", "");
+          btnContainer.style.gridColumn = "2"; // Keep button aligned under text
+          
+          const link = el("a", "cta", group.actionableDeeplink.message || "Open setting");
+          link.href = linkUrl;
+          btnContainer.appendChild(link);
+          card.appendChild(btnContainer);
+        }
+      }
     }
     plan.appendChild(card);
   });
+  
   chat.appendChild(plan);
 
-  const variations = data.query_variations || [];
-  if (variations.length) {
-    chat.appendChild(el("div", "variations", "Also understood as: " + variations.join(", ")));
-  }
+  // The variations block has been intentionally removed to prevent the text wall
   scrollDown();
 }
 
@@ -277,7 +313,6 @@ function renderMeta(meta) {
   badge.className = "badge " + (meta.cache_hit ? "hit" : "miss");
   void badge.offsetWidth; // restart the flash animation
   badge.classList.add("flash");
-  document.getElementById("model").textContent = meta.model + " ($" + meta.cost_usd.toFixed(4) + ")";
 }
 
 form.addEventListener("submit", async (event) => {
