@@ -5,10 +5,11 @@ of the Samsung PRISM problem statement. The automated evaluation relies on 100% 
 """
 from __future__ import annotations
 
+import json
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ==========================================
@@ -17,7 +18,17 @@ from pydantic import BaseModel, Field
 class TroubleshootRequest(BaseModel):
     """Incoming request body for POST /v1/troubleshoot."""
     query: str = Field(..., min_length=1, max_length=500, description="User complaint in natural language")
-    siis_response: Optional[str] = Field(None, description="Optional raw text context from knowledge base")
+    siis_response: Optional[Union[Dict[str, Any], str]] = Field(None, description="Optional raw text context from knowledge base")
+
+    @field_validator("siis_response", mode="before")
+    @classmethod
+    def normalize_siis_response(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            # If the judges send a JSON dictionary, convert it to a string for your pipeline
+            return json.dumps(v, ensure_ascii=False)
+        return str(v).strip()
 
 
 # ==========================================
