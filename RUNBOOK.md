@@ -63,8 +63,7 @@ python -m venv .venv
 # If script execution is restricted, run:
 # Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
-# 4. Upgrade pip and install dependencies
-python -m pip install --upgrade pip
+# 4. Install project dependencies
 pip install -r requirements.txt
 ```
 
@@ -72,7 +71,6 @@ pip install -r requirements.txt
 ```cmd
 python -m venv .venv
 .\.venv\Scripts\activate.bat
-python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -91,8 +89,7 @@ python3 -m venv .venv
 # 3. Activate virtual environment
 source .venv/bin/activate
 
-# 4. Upgrade pip and install dependencies
-python3 -m pip install --upgrade pip
+# 4. Install project dependencies
 pip install -r requirements.txt
 ```
 
@@ -114,8 +111,7 @@ python3 -m venv .venv
 # 4. Activate virtual environment
 source .venv/bin/activate
 
-# 5. Upgrade pip and install dependencies
-pip install --upgrade pip
+# 5. Install project dependencies
 pip install -r requirements.txt
 ```
 
