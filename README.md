@@ -77,8 +77,8 @@ The engine includes a native Samsung One UI web client located at `ui/index.html
 ```
 
 - **Demo Video:** [Watch the Full Demonstration Video](https://drive.google.com/file/d/1gyb0jvfj5BSKe0tgpVsmlruWP-htE-yi/view?usp=sharing)
-- **Presentation Deck:** [View the PRISM Presentation Slides](./PRISM_Submission_PPT.pptx)
-- **AI Disclosure:** [View the AI Disclosure Doc](./AI_Disclosure.docx)
+- **Presentation Deck:** [View the PRISM Presentation Slides](./PRISM_Submission_PPT.pdf)
+- **AI Disclosure:** [View the AI Disclosure Doc](./AI_Disclosure.pdf)
 
 
 ---
