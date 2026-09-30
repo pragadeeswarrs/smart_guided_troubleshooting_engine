@@ -37,10 +37,9 @@ def find_data_file(filename: str) -> Path:
     raise FileNotFoundError(f"Cannot locate {filename} in data/ or current directory.")
 
 
-def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
-    """Deterministic offline extractor converting SIIS text into structured contexts."""
-    lines = [line.strip() for line in siis_text.splitlines() if line.strip()]
-    header = lines[0] if lines else query
+def _extract_single_context(sec_text: str, fallback_query: str) -> Dict[str, Any]:
+    lines = [line.strip() for line in sec_text.splitlines() if line.strip()]
+    header = lines[0] if lines else fallback_query
 
     # Extract topic (preserving hyphens like Wi-Fi)
     topic_match = re.search(r"([A-Za-z0-9\-/\s]+?)(?:Troubleshooting|Issues|Optimization|Recovery|Cleanup|Detection):", header)
@@ -50,7 +49,7 @@ def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
         topic = "Device"
 
     # Split into sentences
-    sentences = re.split(r"(?<=[.!?])\s+", siis_text)
+    sentences = re.split(r"(?<=[.!?])\s+", sec_text)
     meaningful_sentences = [
         s.strip() for s in sentences if len(s.strip()) > 10 and not s.strip().startswith("#")
     ]
@@ -104,18 +103,26 @@ def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
 
     title = f"{topic} Settings"
     goal = f"Follow these steps to perform this {topic} Troubleshooting."
+    return {
+        "title": title,
+        "goal": goal,
+        "score": 0.95,
+        "actions": actions,
+    }
+
+
+def offline_extract_plan(query: str, siis_text: str) -> Dict[str, Any]:
+    """Deterministic offline extractor converting SIIS text into structured contexts."""
+    sections = [s.strip() for s in siis_text.split("\n\n") if s.strip()]
+    if not sections:
+        sections = [siis_text]
+
+    contexts = [_extract_single_context(sec, query) for sec in sections]
 
     return {
         "query": query,
         "query_variations": [],
-        "contexts": [
-            {
-                "title": title,
-                "goal": goal,
-                "score": 0.95,
-                "actions": actions,
-            }
-        ],
+        "contexts": contexts,
     }
 
 

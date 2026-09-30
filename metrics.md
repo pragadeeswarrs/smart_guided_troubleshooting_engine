@@ -1,8 +1,9 @@
 # PRISM Benchmark Performance & Quality Report
 
-**Generated Date:** 2026-09-20  
-**Evaluator:** Member 4 (Validator, Quality Gatekeeper & Release Manager)  
+**Generated Date:** 2026-09-30  
+**Evaluator:** Automated Verification Suite (`benchmark.py` & `validator.py`)  
 **Theme:** Samsung PRISM Hackathon - Theme 2: Smart Guided Troubleshooting Engine  
+**Associated Docs:** [RUNBOOK.md](RUNBOOK.md) | [ARCHITECTURE.md](ARCHITECTURE.md) | [README.md](README.md)
 
 ---
 
@@ -42,7 +43,17 @@
 
 ---
 
-## 4. Gate G5 URL Leak Audit Log
+## 4. Multi-Intent & Composite Query Evaluation
+
+| Composite Query Test | Detected Scenarios | Category Coverage | Deeplink Resolution |
+|---|---|:---:|---|
+| `"My Wi-Fi keeps disconnecting, router restart didn't help, and battery is draining fast"` | Scenario 2 (Battery) + Scenario 3 (Wi-Fi) | `auto`, `manual`, `critical` | `Power Saving`, `Wi-Fi Settings`, `Reset Network Settings` |
+| `"Phone is overheating while charging, cable gets hot, and Wi-Fi disconnects continuously"` | Scenario 6 (Overheating) + Scenario 3 (Wi-Fi) | `auto`, `manual`, `critical` | `Power Saving`, `Wi-Fi Settings`, `Reset Network Settings` |
+| `"Wi-Fi connection keeps dropping randomly, router isn't fixing it, and device storage is full"` | Scenario 3 (Wi-Fi) + Scenario 13 (Storage) | `auto`, `manual`, `critical` | `Wi-Fi Settings`, `Internal Storage`, `Reset Network Settings` |
+
+---
+
+## 5. Gate G5 URL Leak Audit Log
 
 - **Audit Target:** `results.jsonl` + Live endpoint `/v1/troubleshoot` responses
 - **Regex Patterns Checked:** `https?://\S+`, `www\.\S+`, `\.(com|html|org|net)\S*`, `\[.*?\]\(.*?\)`, `<a href=...>`

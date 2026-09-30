@@ -3,311 +3,581 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f3f8" id="themeColor">
 <title>Galaxy Support: Fix it</title>
+<script>
+  /* Resolve theme + accent before first paint so there is no flash. */
+  (function () {
+    var root = document.documentElement, theme = null, accent = null;
+    try { theme = localStorage.getItem("gs-theme"); accent = localStorage.getItem("gs-accent"); } catch (e) {}
+    if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    root.dataset.theme = theme;
+    if (["ocean", "mint", "lilac", "peach"].indexOf(accent) === -1) accent = "ocean";
+    root.dataset.accent = accent;
+  })();
+</script>
 <style>
+  /* =========================================================
+     Samsung One UI Design System Tokens
+     Soft, desaturated surfaces and pastel accents.
+     ========================================================= */
   :root {
-    --blue: #1428a0;
-    --blue-soft: #e7eafb;
-    --ink: #1a1d29;
-    --muted: #626878;
-    --page: #dfe4ee;
-    --surface: #ffffff;
-    --chat: #f3f5fa;
-    --line: #dde1ec;
-    --good: #0b7a4b;
-    --good-bg: #dcf3e8;
-    --fresh: #8a5a00;
-    --fresh-bg: #fdefc9;
-    --bad: #b3261e;
+    --canvas: #f1f3f8;
+    --block: #ffffff;
+    --block-2: #e8ebf3;
+    --ink: #16181d;
+    --muted: #666b78;
+    --line: rgba(22, 24, 29, 0.08);
+    --on-accent: #ffffff;
+    --accent-light: #2f6fe4;
+    --accent-dark: #8ab4ff;
+    --accent: var(--accent-light);
+    --wash-1: #cfe0ff;
+    --wash-2: #e6dcff;
+    --good: #12805f;
+    --good-bg: rgba(18, 128, 95, 0.13);
+    --fresh: #94590a;
+    --fresh-bg: rgba(240, 160, 40, 0.2);
+    --bad: #c4372f;
+    --bad-bg: rgba(196, 55, 47, 0.14);
+    --scrim: rgba(20, 24, 40, 0.28);
+    --shadow: 0 30px 80px rgba(40, 60, 120, 0.22);
+    --r-block: 28px;
+    color-scheme: light;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --blue: #7f93ff;
-      --blue-soft: #232a52;
-      --ink: #eceef6;
-      --muted: #9aa0b4;
-      --page: #0d0f16;
-      --surface: #1a1d29;
-      --chat: #131622;
-      --line: #2b3042;
-      --good: #6fdca6;
-      --good-bg: #163a2a;
-      --fresh: #f3c96a;
-      --fresh-bg: #3d2f0d;
-      --bad: #ff8f87;
-    }
+  :root[data-theme="dark"] {
+    --canvas: #0b0c0f;
+    --block: #1a1c21;
+    --block-2: #26282e;
+    --ink: #eceef3;
+    --muted: #9599a6;
+    --line: rgba(255, 255, 255, 0.09);
+    --on-accent: #0b0c0f;
+    --accent: var(--accent-dark);
+    --wash-1: #1b2a4d;
+    --wash-2: #2b2150;
+    --good: #6fe0b8;
+    --good-bg: rgba(111, 224, 184, 0.15);
+    --fresh: #ffcf7a;
+    --fresh-bg: rgba(255, 207, 122, 0.15);
+    --bad: #ff9a93;
+    --bad-bg: rgba(255, 154, 147, 0.15);
+    --scrim: rgba(0, 0, 0, 0.5);
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
   }
-  * { box-sizing: border-box; }
+  :root[data-accent="mint"]  { --accent-light: #12805f; --accent-dark: #6fe0b8; --wash-1: #cdf1e5; --wash-2: #dbeaff; }
+  :root[data-accent="lilac"] { --accent-light: #6a55d6; --accent-dark: #b3a5ff; --wash-1: #ddd5ff; --wash-2: #ffd9ec; }
+  :root[data-accent="peach"] { --accent-light: #c4562b; --accent-dark: #ffa987; --wash-1: #ffdccb; --wash-2: #fff0c8; }
+  :root[data-theme="dark"][data-accent="mint"]  { --wash-1: #12362d; --wash-2: #1b2a4d; }
+  :root[data-theme="dark"][data-accent="lilac"] { --wash-1: #2b2150; --wash-2: #4a2140; }
+  :root[data-theme="dark"][data-accent="peach"] { --wash-1: #4a2a1c; --wash-2: #443714; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: var(--page);
+    background: var(--canvas);
     color: var(--ink);
-    font-family: "Samsung Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: "SamsungOne", "Samsung Sans", "Google Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
-    line-height: 1.45;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    line-height: 1.4;
+    display: flex; justify-content: center; align-items: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* One UI Mobile Frame */
   .phone {
-    width: 100%;
-    max-width: 420px;
-    height: 100%;
-    max-height: 820px;
-    background: var(--chat);
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    width: 100%; max-width: 420px;
+    height: 100%; max-height: 860px;
+    background: var(--canvas);
     overflow: hidden;
-    padding-top: env(safe-area-inset-top, 0px);
+    container-type: size;
+    transition: background-color 0.3s ease;
   }
   @media (min-width: 460px) {
-    .phone { border-radius: 36px; box-shadow: 0 20px 60px rgba(20, 40, 160, 0.18); border: 1px solid var(--line); }
+    body { background: color-mix(in srgb, var(--canvas) 78%, #7a8296); }
+    .phone { border-radius: 44px; box-shadow: var(--shadow); border: 1px solid var(--line); }
   }
 
-  header {
-    background: var(--surface);
+  /* The stage holds the whole app; recedes on bottom sheet open */
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: var(--canvas);
+    transform-origin: 50% 40%;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1), border-radius 0.4s ease, background-color 0.3s ease;
+    --p: 0;
+  }
+  .phone.sheet-open .stage { transform: scale(0.94); border-radius: 36px; }
+
+  /* ---------- 1. One UI Ergonomic Split ---------- */
+  .appbar {
+    position: absolute; z-index: 5;
+    top: env(safe-area-inset-top, 0px); left: 0; right: 0;
+    height: 60px; padding: 0 24px;
+    display: flex; align-items: center;
+    pointer-events: none;
+  }
+  .appbar::before {
+    content: ""; position: absolute; inset: 0;
+    background: color-mix(in srgb, var(--canvas) 84%, transparent);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--line);
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    opacity: clamp(0, calc((var(--p) - 0.75) * 4), 1);
   }
-  .avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--blue); color: #fff;
-    display: grid; place-items: center;
-    font-weight: 700; font-size: 18px;
+  .appbar .compact {
+    position: relative; font-size: 1.1rem; font-weight: 600;
+    opacity: clamp(0, calc((var(--p) - 0.7) * 4), 1);
+    transform: translateY(calc((1 - var(--p)) * 6px));
   }
-  header h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
-  header p { margin: 0; font-size: 0.82rem; color: var(--muted); }
 
   #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 18px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex: 1; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: 0 24px 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    scroll-behavior: smooth;
   }
+
+  /* Viewing area (top ~35%) with collapsing header */
+  .viewing {
+    flex: 1 0 auto;
+    min-height: 240px;
+    min-height: 35cqh;
+    margin: 0 -24px;
+    padding: 84px 24px 20px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    background:
+      radial-gradient(120% 85% at 0% 0%, var(--wash-1), transparent 65%),
+      radial-gradient(90% 70% at 100% 10%, var(--wash-2), transparent 70%);
+  }
+  .viewing h1, .viewing p { transform-origin: 0 100%; }
+  .viewing h1 {
+    margin: 0; font-size: 2.6rem; line-height: 1.06; font-weight: 500; letter-spacing: -0.02em;
+    opacity: clamp(0, calc(1 - var(--p) * 1.5), 1);
+    transform: translateY(calc(var(--p) * -18px)) scale(calc(1 - var(--p) * 0.14));
+  }
+  .viewing p {
+    margin: 10px 0 0; color: var(--muted); font-size: 0.98rem;
+    opacity: clamp(0, calc(1 - var(--p) * 2.2), 1);
+  }
+  @media (prefers-reduced-motion: reduce) { #chat { scroll-behavior: auto; } }
+
+  /* ---------- Chat Bubbles ---------- */
   .bubble {
-    max-width: 88%;
-    padding: 11px 14px;
-    border-radius: 20px;
-    word-wrap: break-word;
+    max-width: 88%; padding: 13px 18px; border-radius: 26px;
+    word-wrap: break-word; overflow-wrap: anywhere;
   }
-  .bubble.bot { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; align-self: flex-start; }
-  .bubble.user { background: var(--blue); color: #fff; border-bottom-right-radius: 6px; align-self: flex-end; }
-  @media (prefers-color-scheme: dark) { .bubble.user { color: #0d0f16; } }
-  .bubble.error { border-color: var(--bad); color: var(--bad); }
+  .bubble.bot { background: var(--block); border-bottom-left-radius: 8px; align-self: flex-start; }
+  .bubble.user {
+    color: var(--on-accent); border-bottom-right-radius: 8px; align-self: flex-end;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, #c9a6ff));
+  }
+  .bubble.error { color: var(--bad); box-shadow: inset 0 0 0 1.5px var(--bad); }
+  .typing { display: inline-flex; gap: 5px; align-items: center; height: 1.2em; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); opacity: 0.5; }
+  @media (prefers-reduced-motion: no-preference) {
+    .typing i { animation: pulse 1s infinite ease-in-out; }
+    .typing i:nth-child(2) { animation-delay: 0.15s; }
+    .typing i:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes pulse { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+  }
 
-  .plan { align-self: stretch; display: flex; flex-direction: column; gap: 10px; }
+  /* ---------- Action & Step Cards ---------- */
+  .plan { align-self: stretch; display: flex; flex-direction: column; gap: 12px; }
   .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 14px;
-    display: grid;
-    grid-template-columns: 30px 1fr;
-    gap: 4px 12px;
+    background: var(--block);
+    border-radius: var(--r-block);
+    padding: 20px;
+    display: grid; grid-template-columns: 36px 1fr; gap: 4px 14px;
+    --hue: #5b8def;
   }
+  .card:nth-child(4n+2) { --hue: #2fb392; }
+  .card:nth-child(4n+3) { --hue: #8f7cf0; }
+  .card:nth-child(4n+4) { --hue: #f0875a; }
   .step-no {
-    grid-row: 1 / span 3;
-    width: 30px; height: 30px; border-radius: 50%;
-    background: var(--blue-soft); color: var(--blue);
-    display: grid; place-items: center;
-    font-weight: 700; font-size: 0.9rem;
+    grid-row: 1 / span 2; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 600; font-size: 0.95rem;
+    background: color-mix(in srgb, var(--hue) 20%, transparent);
+    color: color-mix(in srgb, var(--hue) 62%, var(--ink));
   }
-  .card h2 { margin: 3px 0 0; font-size: 1rem; }
-  .card p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px;
+  }
+  .card h2 { margin: 0; font-size: 1.08rem; font-weight: 700; line-height: 1.25; }
+  .category-badge {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 8px; border-radius: 999px;
+    background: var(--block-2); color: var(--muted); text-transform: uppercase;
+  }
+  .category-badge.auto { background: var(--good-bg); color: var(--good); }
+  .category-badge.critical { background: var(--bad-bg); color: var(--bad); }
+  .category-badge.manual { background: var(--block-2); color: var(--muted); }
+
+  .card .body { grid-column: 2; }
+  .card p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; font-weight: 400; }
+  .card ul { margin: 10px 0 0; padding-left: 18px; font-size: 0.94rem; }
+  .card li { margin: 5px 0; padding-left: 2px; }
+  .card li::marker { color: var(--muted); }
+  .card .group + .group { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
   .cta {
-    justify-self: start;
-    margin-top: 8px;
-    display: inline-block;
-    background: var(--blue);
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.92rem;
-    padding: 10px 18px;
-    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; margin-top: 12px; padding: 0 22px;
+    border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.95rem;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
   }
-  @media (prefers-color-scheme: dark) { .cta { color: #0d0f16; } }
-  .cta:hover { filter: brightness(1.08); }
-  .cta:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-
-  .variations { color: var(--muted); font-size: 0.84rem; padding: 0 4px; }
-
-  form.composer {
-    display: flex; gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border-top: 1px solid var(--line);
+  @supports (corner-shape: squircle) {
+    .card, .bubble, .dock-block, .detail-row, .sheet { corner-shape: squircle; }
+    .card { --r-block: 40px; }
   }
+
+  /* ---------- Interaction Area: Bottom Dock ---------- */
+  .dock { padding: 4px 24px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; background: var(--canvas); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -24px; padding: 2px 24px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; font: inherit; font-size: 0.9rem; border: 0; border-radius: 999px;
+    padding: 0 18px; min-height: 44px; background: var(--block); color: var(--ink); cursor: pointer;
+  }
+  form.composer { display: flex; gap: 10px; }
   input[type="text"] {
-    flex: 1; min-width: 0;
-    font: inherit;
-    color: var(--ink);
-    background: var(--chat);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 11px 16px;
-  }
-  button.send {
-    font: inherit; font-weight: 700;
-    background: var(--blue); color: #fff;
+    flex: 1; min-width: 0; height: 56px; padding: 0 24px;
+    font: inherit; color: var(--ink); background: var(--block);
     border: 0; border-radius: 999px;
-    padding: 0 20px;
-    cursor: pointer;
   }
-  @media (prefers-color-scheme: dark) { button.send { color: #0d0f16; } }
-  button.send:disabled { opacity: 0.55; cursor: wait; }
+  input[type="text"]::placeholder { color: var(--muted); }
+  button.send {
+    font: inherit; font-weight: 600; height: 56px; padding: 0 26px;
+    border: 0; border-radius: 999px; cursor: pointer;
+    color: var(--on-accent);
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, #c9a6ff));
+  }
+  button.send:disabled { opacity: 0.5; cursor: wait; }
 
-  /* The status strip is the thing to show the judges */
+  .dock-row { display: flex; gap: 10px; align-items: stretch; }
+  .dock-block { background: var(--block); border-radius: 24px; }
   #status {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    background: var(--surface);
-    border-top: 1px solid var(--line);
-    font-size: 0.85rem;
-    color: var(--muted);
+    flex: 1; min-width: 0; min-height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 6px 14px;
+    border: 0; font: inherit; color: var(--muted); font-size: 0.85rem; text-align: left; cursor: pointer;
   }
-  #status .latency { font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
-  #status .badge { padding: 4px 12px; border-radius: 999px; font-weight: 600; background: var(--line); color: var(--muted); }
+  #status .latency { font-variant-numeric: tabular-nums; font-size: 1rem; font-weight: 700; color: var(--ink); white-space: nowrap; flex-shrink: 0; }
+  #status .badge { padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 0.78rem; background: var(--block-2); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   #status .badge.hit { background: var(--good-bg); color: var(--good); }
   #status .badge.miss { background: var(--fresh-bg); color: var(--fresh); }
-  #status .model { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
+  #status .details-group {
+    display: flex; align-items: center; gap: 5px;
+    margin-left: auto; flex-shrink: 0;
+    color: var(--muted); font-size: 0.82rem; font-weight: 600;
+  }
+  #status .chev { width: 14px; height: 14px; flex-shrink: 0; }
   @media (prefers-reduced-motion: no-preference) {
     #status .badge.flash { animation: flash 0.5s ease-out; }
     @keyframes flash { from { transform: scale(1.25); } to { transform: scale(1); } }
   }
+
+  /* One UI Style Dark Mode Switch */
+  .switch { flex: none; width: 76px; padding: 0; border: 0; background: var(--block); border-radius: 24px; display: grid; place-items: center; cursor: pointer; }
+  .switch .track {
+    position: relative; width: 56px; height: 34px; border-radius: 999px;
+    background: var(--block-2); transition: background-color 0.25s ease;
+  }
+  .switch .knob {
+    position: absolute; top: 3px; left: 3px; width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center; color: var(--on-accent);
+    background: var(--accent);
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1), background-color 0.25s ease;
+  }
+  .switch[aria-checked="true"] .knob { transform: translateX(22px); }
+  .switch svg { position: absolute; width: 16px; height: 16px; transition: opacity 0.2s ease; }
+  .switch .i-moon { opacity: 0; }
+  .switch[aria-checked="true"] .i-sun { opacity: 0; }
+  .switch[aria-checked="true"] .i-moon { opacity: 1; }
+
+  /* Tactile feedback (3% press scale) */
+  .tap { transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease; }
+  .tap:active { transform: scale(0.97); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- One UI Bottom Sheet & Scrim ---------- */
+  .scrim {
+    position: absolute; inset: 0; z-index: 10;
+    background: var(--scrim);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
+  }
+  .phone.sheet-open .scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
+  .sheet {
+    position: absolute; z-index: 11; left: 0; right: 0; bottom: 0;
+    max-height: 82%; overflow-y: auto;
+    background: var(--block); border-radius: 36px 36px 0 0;
+    padding: 0 24px calc(22px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(105%); visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1), visibility 0s 0.4s;
+  }
+  .phone.sheet-open .sheet { transform: none; visibility: visible; transition-delay: 0s; }
+  .grab { padding: 12px 0 8px; display: grid; place-items: center; touch-action: none; cursor: grab; }
+  .grab i { width: 40px; height: 5px; border-radius: 3px; background: var(--block-2); }
+  .sheet h3 { margin: 4px 0 14px; font-size: 1.35rem; font-weight: 600; }
+  .sheet h4 { margin: 22px 0 10px; font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+  .detail-row {
+    display: flex; justify-content: space-between; gap: 16px; align-items: baseline;
+    padding: 14px 18px; background: var(--canvas); border-radius: 20px;
+  }
+  .detail-row + .detail-row { margin-top: 8px; }
+  .detail-row span:first-child { color: var(--muted); font-size: 0.9rem; flex: none; }
+  .detail-row span:last-child { font-weight: 600; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+  .swatches { display: flex; gap: 14px; }
+  .swatch {
+    width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    background: var(--sw); box-shadow: 0 0 0 0 var(--sw);
+    display: grid; place-items: center; color: #fff;
+  }
+  .swatch svg { width: 20px; height: 20px; opacity: 0; }
+  .swatch[aria-checked="true"] { box-shadow: 0 0 0 3px var(--block), 0 0 0 5px var(--sw); }
+  .swatch[aria-checked="true"] svg { opacity: 1; }
+  .done {
+    width: 100%; margin-top: 24px; height: 52px; border: 0; border-radius: 999px; cursor: pointer;
+    font: inherit; font-weight: 600; background: var(--block-2); color: var(--ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stage, .sheet, .scrim, .knob, .tap { transition-duration: 0.01s !important; }
+  }
 </style>
 </head>
 <body>
-<main class="phone">
-  <header>
-    <div class="avatar" aria-hidden="true">S</div>
-    <div>
-      <h1>Galaxy Support</h1>
-      <p>Describe the problem and get guided steps</p>
+<main class="phone" id="phone">
+  <div class="stage" id="stage">
+    <div class="appbar" aria-hidden="true"><span class="compact">Galaxy Support</span></div>
+
+    <section id="chat" aria-live="polite">
+      <div class="viewing" id="viewing">
+        <h1>Galaxy Support</h1>
+        <p>Describe the problem and get guided steps</p>
+      </div>
+      <div class="bubble bot">Hi! Tell me what's going wrong with your Galaxy phone, or tap a topic below to get guided steps.</div>
+    </section>
+
+    <div class="dock">
+      <div class="chips" id="chips" aria-label="Suggestions">
+        <button type="button" class="chip tap">Battery drains too fast</button>
+        <button type="button" class="chip tap">Wi-Fi keeps disconnecting</button>
+        <button type="button" class="chip tap">Camera app keeps crashing</button>
+        <button type="button" class="chip tap">Phone is lagging and freezing</button>
+        <button type="button" class="chip tap">Phone overheating while charging</button>
+        <button type="button" class="chip tap">Touch screen unresponsive</button>
+        <button type="button" class="chip tap">Bluetooth headphones won't pair</button>
+      </div>
+
+      <form class="composer" id="form">
+        <input type="text" id="query" placeholder="What's the problem?" maxlength="500" autocomplete="off" aria-label="Describe your problem" required>
+        <button type="submit" class="send tap" id="send">Fix it</button>
+      </form>
+
+      <div class="dock-row">
+        <button type="button" id="status" class="dock-block tap" aria-haspopup="dialog">
+          <span class="latency" id="latency">-- ms</span>
+          <span class="badge" id="cache">Ready</span>
+          <span class="details-group">
+            <span class="details-text">Details</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+          </span>
+          <span class="sr">Show request details</span>
+        </button>
+        <button type="button" class="switch tap" id="themeToggle" role="switch" aria-checked="false" aria-label="Dark mode">
+          <span class="track">
+            <span class="knob">
+              <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+              <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+            </span>
+          </span>
+        </button>
+      </div>
     </div>
-  </header>
+  </div>
 
-  <section id="chat" aria-live="polite">
-    <div class="bubble bot">Hi! Tell me what's going wrong with your phone, for example "battery drains too fast".</div>
-  </section>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grab" id="grab"><i></i></div>
+    <h3 id="sheetTitle">Request details</h3>
+    <div class="detail-row"><span>Response time</span><span id="dLatency">--</span></div>
+    <div class="detail-row"><span>Cache</span><span id="dCache">No request yet</span></div>
+    <div class="detail-row"><span>Model</span><span id="dModel">--</span></div>
+    <div class="detail-row"><span>Your question</span><span id="dQuery">--</span></div>
+    <div class="detail-row"><span>Service</span><span id="dEndpoint"></span></div>
 
-  <form class="composer" id="form">
-    <input type="text" id="query" placeholder="What's the problem?" maxlength="500" autocomplete="off" aria-label="Describe your problem" required>
-    <button type="submit" class="send" id="send">Fix it</button>
-  </form>
-
-  <footer id="status" aria-label="Request status">
-    <span class="latency" id="latency">-- ms</span>
-    <span class="badge" id="cache">No request yet</span>
-    <span class="model" id="model"></span>
-  </footer>
+    <h4 id="accentLabel">Accent colour</h4>
+    <div class="swatches" role="radiogroup" aria-labelledby="accentLabel" id="swatches">
+      <button type="button" class="swatch tap" role="radio" aria-checked="false" aria-label="Ocean" data-accent="ocean" style="--sw:#5b8def"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+      <button type="button" class="swatch tap" role="radio" aria-checked="false" aria-label="Mint" data-accent="mint" style="--sw:#3fbf9c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+      <button type="button" class="swatch tap" role="radio" aria-checked="false" aria-label="Lilac" data-accent="lilac" style="--sw:#9a88f5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+      <button type="button" class="swatch tap" role="radio" aria-checked="false" aria-label="Peach" data-accent="peach" style="--sw:#f4956a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    </div>
+    <button type="button" class="done tap" id="closeSheet">Done</button>
+  </div>
 </main>
 
 <script>
 const API_URL = "http://127.0.0.1:8000/v1/troubleshoot";
-const ALLOWED_SCHEMES = ["bixby:", "https:"];
+const ALLOWED_SCHEMES = ["bixby:", "https:", "http:"];
+const REQUEST_TIMEOUT_MS = 30000;
 
+const root = document.documentElement;
+const phone = document.getElementById("phone");
+const stage = document.getElementById("stage");
 const chat = document.getElementById("chat");
+const viewing = document.getElementById("viewing");
 const form = document.getElementById("form");
 const input = document.getElementById("query");
 const sendBtn = document.getElementById("send");
+const statusBtn = document.getElementById("status");
+const themeBtn = document.getElementById("themeToggle");
+const themeMeta = document.getElementById("themeColor");
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
+let lastQuery = "";
+let lastMeta = null;
+
+function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* session only */ } }
+function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+/* ---------- Theme (dark/light) and accent ---------- */
+function syncTheme() {
+  const dark = root.dataset.theme === "dark";
+  themeBtn.setAttribute("aria-checked", String(dark));
+  themeMeta.setAttribute("content", dark ? "#0b0c0f" : "#f1f3f8");
+}
+themeBtn.addEventListener("click", () => {
+  const next = root.dataset.theme === "dark" ? "light" : "dark";
+  root.dataset.theme = next;
+  store("gs-theme", next);
+  syncTheme();
+});
+darkQuery.addEventListener("change", (e) => {
+  if (stored("gs-theme")) return;
+  root.dataset.theme = e.matches ? "dark" : "light";
+  syncTheme();
+});
+syncTheme();
+
+const swatches = Array.from(document.querySelectorAll(".swatch"));
+function syncAccent() {
+  swatches.forEach(s => s.setAttribute("aria-checked", String(s.dataset.accent === root.dataset.accent)));
+}
+swatches.forEach(s => s.addEventListener("click", () => {
+  root.dataset.accent = s.dataset.accent;
+  store("gs-accent", s.dataset.accent);
+  syncAccent();
+}));
+syncAccent();
+
+/* ---------- Collapsing Header: --p goes 0 (giant title) to 1 (compact bar) ---------- */
+let ticking = false;
+function updateHeader() {
+  ticking = false;
+  const dist = Math.max(1, viewing.offsetHeight - 70);
+  const p = Math.min(1, Math.max(0, chat.scrollTop / dist));
+  stage.style.setProperty("--p", p.toFixed(3));
+}
+function requestHeaderUpdate() { if (!ticking) { ticking = true; requestAnimationFrame(updateHeader); } }
+chat.addEventListener("scroll", requestHeaderUpdate, { passive: true });
+window.addEventListener("resize", requestHeaderUpdate);
+updateHeader();
+
+/* ---------- Helpers ---------- */
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text !== undefined) node.textContent = text; // textContent: never parses HTML
+  if (text !== undefined) node.textContent = text;
   return node;
 }
-
 function addBubble(text, kind) {
   const b = el("div", "bubble " + kind, text);
   chat.appendChild(b);
   scrollDown();
   return b;
 }
-
-function scrollDown() { chat.scrollTop = chat.scrollHeight; }
+function scrollDown() { chat.scrollTop = chat.scrollHeight; requestHeaderUpdate(); }
 
 function isSafeDeeplink(url) {
+  if (!url || typeof url !== "string") return false;
+  if (url.startsWith("bixby://")) return true;
   try { return ALLOWED_SCHEMES.includes(new URL(url).protocol); }
   catch { return false; }
 }
 
+/* ---------- Rendering Engine (Supports both Object & String Deeplinks) ---------- */
+function renderStepGroup(group) {
+  const wrap = el("div", "group");
+  const steps = Array.isArray(group.steps) ? group.steps : [];
+  if (steps.length > 0) {
+    const ul = el("ul");
+    steps.forEach(s => ul.appendChild(el("li", "", String(s))));
+    wrap.appendChild(ul);
+  }
+  
+  // Extract actionableDeeplink whether returned as a string URI or an object
+  const dl = group.actionableDeeplink;
+  const uri = typeof dl === "string" ? dl : (dl && dl.deeplink ? dl.deeplink : null);
+  const message = (typeof dl === "object" && dl && dl.message) 
+    ? dl.message 
+    : (uri && uri.startsWith("bixby:") ? "Open in Settings" : "Open setting");
+
+  if (uri && isSafeDeeplink(uri)) {
+    const link = el("a", "cta tap", message);
+    link.href = uri;
+    link.title = "Action Deeplink: " + uri;
+    wrap.appendChild(link);
+  }
+  return wrap.childNodes.length ? wrap : null;
+}
+
 function renderPlan(data) {
-  const contexts = (data.response && data.response.contexts) || [];
+  const contexts = (data && data.response && data.response.contexts) || [];
   if (contexts.length === 0) {
     addBubble("I couldn't find steps for that. Try describing the problem differently.", "bot");
     return;
   }
+  contexts.forEach((ctx, c) => {
+    addBubble((c === 0 ? "Here's how to fix it: " : "Also try: ") + (ctx.title || ""), "bot");
+    const plan = el("div", "plan");
+    (ctx.actions || []).forEach((action, i) => {
+      const card = el("article", "card");
+      card.appendChild(el("div", "step-no", String(i + 1)));
 
-  // Display the main goal/title
-  const ctx = contexts[0];
-  addBubble("Here's how to fix it: " + (ctx.title || ""), "bot");
-
-  const plan = el("div", "plan");
-  const actions = ctx.actions || [];
-
-  // Iterate through the actions array instead of contexts
-  actions.forEach((action, i) => {
-    const card = el("article", "card");
-    card.appendChild(el("div", "step-no", String(i + 1)));
-    card.appendChild(el("h2", "", action.actionName || "Step " + (i + 1)));
-    if (action.description) card.appendChild(el("p", "", action.description));
-
-    // Dive into stepGroups to render the actual steps and buttons
-    if (action.stepGroups && action.stepGroups.length > 0) {
-      const group = action.stepGroups[0];
-      
-      // 1. Render the bulleted steps
-      if (group.steps && group.steps.length > 0) {
-        const stepContainer = el("div", "");
-        stepContainer.style.gridColumn = "2"; // Aligns with your existing CSS grid
-        
-        const ul = el("ul", "");
-        ul.style.paddingLeft = "20px";
-        ul.style.margin = "8px 0";
-        ul.style.fontSize = "0.9rem";
-        ul.style.color = "var(--muted)";
-        
-        group.steps.forEach(stepText => {
-          ul.appendChild(el("li", "", stepText));
-        });
-        
-        stepContainer.appendChild(ul);
-        card.appendChild(stepContainer);
+      const header = el("div", "card-header");
+      header.appendChild(el("h2", "", action.actionName || "Step " + (i + 1)));
+      if (action.category) {
+        const cat = String(action.category).toLowerCase();
+        header.appendChild(el("span", "category-badge " + cat, cat));
       }
+      card.appendChild(header);
 
-      // 2. Render the actionable deeplink button
-      if (group.actionableDeeplink && group.actionableDeeplink.deeplink) {
-        const linkUrl = group.actionableDeeplink.deeplink;
-        if (isSafeDeeplink(linkUrl)) {
-          const btnContainer = el("div", "");
-          btnContainer.style.gridColumn = "2"; // Keep button aligned under text
-          
-          const link = el("a", "cta", group.actionableDeeplink.message || "Open setting");
-          link.href = linkUrl;
-          btnContainer.appendChild(link);
-          card.appendChild(btnContainer);
-        }
-      }
-    }
-    plan.appendChild(card);
+      const body = el("div", "body");
+      if (action.description) body.appendChild(el("p", "", action.description));
+      (action.stepGroups || []).forEach(g => {
+        const node = renderStepGroup(g || {});
+        if (node) body.appendChild(node);
+      });
+      if (body.childNodes.length) card.appendChild(body);
+      plan.appendChild(card);
+    });
+    chat.appendChild(plan);
   });
-  
-  chat.appendChild(plan);
-
-  // The variations block has been intentionally removed to prevent the text wall
   scrollDown();
 }
 
 function renderMeta(meta) {
-  document.getElementById("latency").textContent = meta.latency_ms + " ms";
+  meta = meta || {};
+  lastMeta = meta;
+  const hasLatency = typeof meta.latency_ms === "number";
+  document.getElementById("latency").textContent = hasLatency ? meta.latency_ms + " ms" : "-- ms";
   const badge = document.getElementById("cache");
   badge.textContent = meta.cache_hit ? "Cache hit" : "Cache miss";
   badge.className = "badge " + (meta.cache_hit ? "hit" : "miss");
@@ -315,21 +585,32 @@ function renderMeta(meta) {
   badge.classList.add("flash");
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const query = input.value.trim();
-  if (!query) return;
-
+/* ---------- Query Submission ---------- */
+async function ask(query) {
+  lastQuery = query;
   addBubble(query, "user");
+  const chips = document.getElementById("chips");
+  if (chips) chips.remove();
   input.value = "";
   sendBtn.disabled = true;
-  const pending = addBubble("Working on it...", "bot");
 
+  const pending = el("div", "bubble bot");
+  const dots = el("span", "typing");
+  dots.setAttribute("role", "status");
+  dots.setAttribute("aria-label", "Working on it");
+  dots.append(el("i"), el("i"), el("i"));
+  pending.appendChild(dots);
+  chat.appendChild(pending);
+  scrollDown();
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
+      signal: controller.signal,
     });
     if (!res.ok) throw new Error("Server returned " + res.status);
     const data = await res.json();
@@ -337,13 +618,80 @@ form.addEventListener("submit", async (event) => {
     renderPlan(data);
     renderMeta(data.meta);
   } catch (err) {
-    pending.textContent = "Couldn't reach the troubleshooting service (" + err.message + "). Check that the backend is running on port 8000, then try again.";
+    const reason = err.name === "AbortError" ? "the request timed out" : err.message;
+    pending.textContent = "Couldn't reach the troubleshooting service (" + reason + "). Check that the backend is running on port 8000, then try again.";
     pending.classList.add("error");
+    scrollDown();
   } finally {
+    clearTimeout(timer);
     sendBtn.disabled = false;
     input.focus();
   }
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const query = input.value.trim();
+  if (!query || sendBtn.disabled) return;
+  ask(query);
 });
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => { if (!sendBtn.disabled) ask(chip.textContent); });
+});
+
+/* ---------- Bottom Sheet Details Modal ---------- */
+const sheet = document.getElementById("sheet");
+const scrim = document.getElementById("scrim");
+const grab = document.getElementById("grab");
+const closeBtn = document.getElementById("closeSheet");
+document.getElementById("dEndpoint").textContent = "PRISM Guided Troubleshooting Engine (v1.0)";
+
+function fillSheet() {
+  const m = lastMeta;
+  document.getElementById("dLatency").textContent = m && typeof m.latency_ms === "number" ? m.latency_ms + " ms" : "--";
+  document.getElementById("dCache").textContent = m ? (m.cache_hit ? "Hit: answered from cache" : "Miss: freshly generated") : "No request yet";
+  document.getElementById("dModel").textContent = m && typeof m.model === "string" && m.model ? m.model : "--";
+  document.getElementById("dQuery").textContent = lastQuery || "--";
+  document.getElementById("dEndpoint").textContent = "PRISM Guided Troubleshooting Engine (v1.0)";
+}
+function openSheet() {
+  fillSheet();
+  phone.classList.add("sheet-open");
+  stage.inert = true;
+  setTimeout(() => closeBtn.focus(), 50);
+}
+function closeSheet() {
+  if (!phone.classList.contains("sheet-open")) return;
+  phone.classList.remove("sheet-open");
+  stage.inert = false;
+  statusBtn.focus();
+}
+statusBtn.addEventListener("click", openSheet);
+scrim.addEventListener("click", closeSheet);
+closeBtn.addEventListener("click", closeSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+
+// Drag the capsule handle down to dismiss
+let dragStart = null, dragDy = 0;
+grab.addEventListener("pointerdown", (e) => {
+  dragStart = e.clientY; dragDy = 0;
+  sheet.style.transition = "none";
+  grab.setPointerCapture(e.pointerId);
+});
+grab.addEventListener("pointermove", (e) => {
+  if (dragStart === null) return;
+  dragDy = Math.max(0, e.clientY - dragStart);
+  sheet.style.transform = "translateY(" + dragDy + "px)";
+});
+function endDrag() {
+  if (dragStart === null) return;
+  dragStart = null;
+  sheet.style.transition = "";
+  sheet.style.transform = "";
+  if (dragDy > 90) closeSheet();
+}
+grab.addEventListener("pointerup", endDrag);
+grab.addEventListener("pointercancel", endDrag);
 </script>
 </body>
 </html>

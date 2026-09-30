@@ -114,12 +114,16 @@ class RetrievalEngine:
             return {"deeplink_uri": None, "category": "manual", "validation": None}
 
         matched_item = self.catalog[best_idx]
+        dl_uri = matched_item.get("deeplink") or matched_item.get("uri") or matched_item.get("masked_uri")
 
         # Rule 2 & 3: Return verbatim URI, category, and validation object
         return {
-            "deeplink_uri": matched_item.get("uri") or matched_item.get("masked_uri"),
+            "deeplink_uri": dl_uri,
+            "deeplink": dl_uri,
             "category": matched_item.get("category", "auto"),
-            "validation": matched_item.get("validation")
+            "validation": matched_item.get("validation"),
+            "message": matched_item.get("message", "Open in Settings"),
+            "description": matched_item.get("description", "It will open settings screen"),
         }
 
     def sort_actions_by_category(self, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
