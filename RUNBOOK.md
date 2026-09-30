@@ -208,7 +208,7 @@ python benchmark.py
 5. **Gate G5 URL Audit:** Regex audit for zero link leaks (`http`, `https`, `www`, `.com`, `.html`).
 6. **Block A1–A5 Rules:** Goal regex format, 2–3 word titles, 5–7 word descriptions starting with `"It will"`, category sorting (`auto` &rarr; `manual` &rarr; `critical`), and query variation counts.
 
-Generates or updates [metrics.md](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/metrics.md).
+Generates or updates [metrics.md](metrics.md).
 
 ### Regenerating the 20-Scenario Evaluation File (`results.jsonl`):
 ```bash

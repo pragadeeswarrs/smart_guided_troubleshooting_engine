@@ -129,30 +129,30 @@ flowchart TD
 
 ## 3. Subsystem Breakdown & Design Principles
 
-### A. Client & Presentation Layer ([`ui/index.html`](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/ui/index.html))
+### A. Client & Presentation Layer ([`ui/index.html`](ui/index.html))
 - **One UI Ergonomic Split:** Designed with the Samsung One UI principle: upper 35% viewing area (collapsing header with title) and lower 65% interaction area (chips, composer, status pill).
 - **Dynamic Feedback:** Real-time latency badge displays round-trip timing and flashes an animated amber badge on **Cache Miss** or glowing green on **Cache Hit**.
 - **Bottom Diagnostic Drawer:** Accessible by tapping the status pill; exposes server processing latency, cache hit state, model provenance, and estimated request cost.
 - **Interactive DeepLink Follow-ups:** Translates actionable deeplinks into distinct action buttons (e.g. *"Power Saving"*, *"Wi-Fi Settings"*, *"Reset Network Settings"*), while omitting buttons on physical/manual steps.
 
-### B. Multi-Tier Semantic Cache ([`app/cache_manager.py`](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/app/cache_manager.py))
+### B. Multi-Tier Semantic Cache ([`app/cache_manager.py`](app/cache_manager.py))
 - **Tier 1 (Exact Match):** In-memory O(1) dictionary hash lookup (&lt; 0.05 ms).
 - **Tier 2 (Lexical Token Overlap):** Normalized alphanumeric tokenization with stop-word stripping. Jaccard similarity &ge; 0.70 triggers an immediate cache hit.
 - **Tier 3 (Dense Vector Cosine Similarity):** `all-MiniLM-L6-v2` encodes the query into a 384-dim tensor. Cosine similarity &ge; 0.74 against cached plan embeddings triggers a semantic hit, accommodating natural human paraphrasing.
 - **Cost & Latency Benefit:** On cache hits, processing time drops from ~4,000 ms to **0.8 ms** at **$0.00** LLM inference cost.
 
-### C. Hybrid Knowledge & Context Matcher ([`app/context_matcher.py`](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/app/context_matcher.py))
+### C. Hybrid Knowledge & Context Matcher ([`app/context_matcher.py`](app/context_matcher.py))
 - **Multi-Intent / Composite Query Detection:** Automatically recognizes complaints mentioning two or more simultaneous problems (e.g., Wi-Fi dropping + battery drain, or storage full + wireless charging failure).
 - **Dual Retrieval Engine:** Blends keyword domain boosts with dense semantic search against the 20 Samsung SIIS reference scenarios.
 - **Context Synthesis:** Concatenates relevant SIIS reference texts into a cohesive reference prompt for the LLM.
 
-### D. Deeplink & Precondition Resolution ([`app/services/search_service.py`](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/app/services/search_service.py))
-- **Hybrid Catalog Search:** Matches step descriptions against [data/deeplinks.json](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/data/deeplinks.json) using reciprocal rank fusion of BM25 and ChromaDB cosine distances.
+### D. Deeplink & Precondition Resolution ([`app/services/search_service.py`](app/services/search_service.py))
+- **Hybrid Catalog Search:** Matches step descriptions against [data/deeplinks.json](data/deeplinks.json) using reciprocal rank fusion of BM25 and ChromaDB cosine distances.
 - **Precondition Extraction:** Injects automated device state validation rules (e.g. `wifi_enabled == true`, `power_saving_mode == true`).
 - **Category Classification:** Classifies each action into `auto` (software navigation), `manual` (physical hardware checks), or `critical` (device resets / recovery).
 - **Sorting Rule (Block A2):** Actions are strictly sorted into `auto` &rarr; `manual` &rarr; `critical`.
 
-### E. Quality Gatekeeper & Deterministic Sanitizer ([`validator.py`](file:///c:/Users/asus/.gemini/antigravity-ide/scratch/smart_guided_troubleshooting_engine/validator.py))
+### E. Quality Gatekeeper & Deterministic Sanitizer ([`validator.py`](validator.py))
 - **Gate G5 (Zero URL Leaks):** Programmatic regex scrubbing purges any instance of `http://`, `https://`, `www.`, `.com`, `.html`, markdown links `[text](url)`, or HTML `<a>` tags.
 - **Block A1 Compliance:**
   - Goal regex: Enforces `Follow these steps to perform this <Name> Troubleshooting.`
